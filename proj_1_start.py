@@ -3,7 +3,7 @@ import numpy as np
 import scipy.io as io 
 import matplotlib.pyplot as plt 
 from sklearn.decomposition import PCA 
-
+from sklearn.discriminant_analysis import LinearDiscriminantAnalysis
 # Load in the matlab data file 
 data = io.loadmat('data.mat')['face']
 
@@ -12,10 +12,12 @@ neut_faces = data[:,:,0::3]
 exp_faces = data[:,:,1::3]
 illum_faces = data[:,:,2::3]
 
+# Reformat the shape of the data to easier be passed through PCA
 neut_shape = np.array([neut_faces[:,:,i] for i in range(200)])
 exp_face = np.array([exp_faces[:,:,i] for i in range(200)])
 illum_face = np.array([illum_faces[:,:,i] for i in range(200)])
 
+# Define PCA pipeline
 pca = PCA(n_components=2)
 
 pca_neut = pca.fit_transform(neut_faces.reshape(200, 504))
