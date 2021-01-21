@@ -24,10 +24,13 @@ neut_emote_indx = other_arr[np.isin(other_arr, illum_arr, invert=True)]
 illum_arrs = np.array([i*3 for i in range(200)])
 full_data = np.array([data[:,:,i] for i in range(600)])
 neut_emote = np.take(full_data, neut_emote_indx, axis=0)
-print(neut_emote.shape)
-plt.imshow(neut_emote[-1], cmap='gray')
-plt.show()
+# print(neut_emote.shape)
+# plt.imshow(neut_emote[-1], cmap='gray')
+# plt.show()
 
+print(full_data.shape)
+print(neut_emote.shape)
+print(illum_arrs.shape)
 
 # Split data between Neutral, Expression, and Illumination images
 # neut_faces = data[:,:,0::3]
