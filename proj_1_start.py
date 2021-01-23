@@ -44,7 +44,7 @@ full_data = np.array([data[:,:,i] for i in range(600)])
 
 
 # Define PCA pipeline
-pca_coms = 4
+pca_coms = 7
 pca = PCA(n_components=pca_coms)
 cols = ['PCA'+str(i+1) for i in range(pca_coms)]
 
@@ -52,17 +52,18 @@ pca_neut = pca.fit_transform(full_data.reshape(600, 504))
 
 pca_df = pd.DataFrame(data=pca_neut, columns=cols)
 pca_df['labels'] = pd.Series(labels)
-pca_df = pca_df.sample(frac=1).reset_index(drop=True)
+# pca_df = pca_df.sample(frac=1).reset_index(drop=True)
 
 x_train, x_test, y_train, y_test = train_test_split(pca_df[cols], 
-                                    pca_df['labels'], test_size=0.3, random_state=4)
+                                    pca_df['labels'], test_size=0.3, 
+                                    random_state=4)
 
-knn_mod = KNeighborsClassifier(n_neighbors=35)
+knn_mod = KNeighborsClassifier(n_neighbors=5)
 knn_mod.fit(x_train, y_train)
 y_hat = knn_mod.predict(x_test)
 print(accuracy_score(y_test, y_hat))
 
-# Ns = [i for i in range(1,60,3)]
+# Ns = [i for i in range(1,200,2)]
 # accs = []
 # for n in Ns:
 #     knn_mod = KNeighborsClassifier(n_neighbors=n)
@@ -74,6 +75,7 @@ print(accuracy_score(y_test, y_hat))
 # print(n_df)
 # n_df.plot(x='N', y='Acc')
 # plt.show()
+
 # Plot and view the PCAs between the classes 
 # fig = plt.figure(figsize=(8,8))
 # ax = fig.add_subplot(1,1,1)
