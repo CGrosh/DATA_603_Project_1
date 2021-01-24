@@ -23,8 +23,8 @@ def knn_fit(x_train, y_train, x_test, k):
     pred_arr = []
     dist_arrs = []
     for test_val in range(len(x_test)):
-        test_arr = np.array(x_test.iloc[test_val]).reshape(1, 7)
-
+        test_arr = np.array(x_test.iloc[test_val])
+        test_arr = test_arr.reshape(1, test_arr.shape[0])
         dists_x = np.linalg.norm(train_x- test_arr, axis=1, ord=2)
         joined_dists = np.column_stack((train_y, dists_x))
 
@@ -79,8 +79,7 @@ pca_df['labels'] = pd.Series(labels)
 
 x_train, x_test, y_train, y_test = train_test_split(pca_df[cols], 
                                     pca_df['labels'], test_size=0.3, 
-                                    random_state=5)
+                                    random_state=4)
 
 preds = knn_fit(x_train, y_train, x_test, 65)
 print(accuracy_score(y_test, preds))
-# print(knn_fit(x_train, y_train, x_test[0], euclidean))
