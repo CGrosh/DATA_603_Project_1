@@ -77,6 +77,36 @@ pca_df = pd.DataFrame(data=pca_full, columns=cols)
 pca_df['labels'] = pd.Series(labels)
 # pca_df = pca_df.sample(frac=1).reset_index(drop=True)
 
+total_mu = np.array(np.mean(pca_df[cols]))
+
+# Fishers Linear Discriminant 
+pca_emote = pca_df[cols].loc[np.array(pca_df[pca_df['labels']==1].index)]
+pca_neutral = pca_df[cols].loc[np.array(pca_df[pca_df['labels']==0].index)]
+
+# Compute Column means and Center data 
+mu_emote, mu_neut = np.array(np.mean(pca_emote)), np.array(np.mean(pca_neutral))
+pca_emote_stand = scale.fit_transform(pca_emote)
+pca_neut_stand = scale.fit_transform(pca_neutral)
+
+# Scatter Matrices
+emote_scat = pca_emote_stand.T.dot(pca_emote_stand)
+netural_scat = pca_neut_stand.T.dot(pca_neut_stand)
+
+# Within Class Scatter Matrix 
+sw = emote_scat + netural_scat
+
+w = np.linalg.inv(sw).dot(mu_neut-mu_emote)
+
+eig_vals, eig_vecs = np.linalg.eig(np.linalg.inv(sw).dot(sb))
+
+# pairs = [(np.abs(eig_vals[i]), eig_vecs[:,i]) for i in range(len(eig_vals))]
+# pairs = sorted(pairs, key=lambda x: x[0], reverse=True)
+
+# eigen_value_sums = sum(eig_vals)
+
+# w_matrix = np.hstack((pairs[0][1].reshape(7,1), pairs[1][1].reshape(7,1))).real
+x_lda = np.array(pca_df[cols]).dot(w) 
+
 x_train, x_test, y_train, y_test = train_test_split(pca_df[cols], 
                                     pca_df['labels'], test_size=0.3, 
                                     random_state=4)

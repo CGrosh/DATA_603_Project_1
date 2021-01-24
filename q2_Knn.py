@@ -64,6 +64,3 @@ pca_full = np.concatenate(pca_arrs, axis=1)
 
 pca_df = pd.DataFrame(data=pca_full, columns=cols)
 pca_df['labels'] = pd.Series(train_labels)
-
-
-    

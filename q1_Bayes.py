@@ -46,6 +46,7 @@ pca_full = np.concatenate(pca_arrs, axis=1)
 pca_df = pd.DataFrame(data=pca_full, columns=cols)
 pca_df['labels'] = pd.Series(labels)
 
+# Split the Data into training and testing Features and Labels 
 x_train, x_test, y_train, y_test = train_test_split(pca_df[cols], 
                                     pca_df['labels'], test_size=0.3, 
                                     random_state=5)
@@ -65,18 +66,23 @@ pca_emote_stand = scale.fit_transform(pca_emote[cols])
 pca_neut_stand = scale.fit_transform(pca_neutral[cols])
 
 # Compute Covariance Matricies
-pca_emote_cov,  pca_neutral_cov = pca_emote_stand.T.dot(pca_emote_stand)/200, pca_neut_stand.T.dot(pca_neut_stand)/400
-
+pca_emote_cov = pca_emote_stand.T.dot(pca_emote_stand)/pca_emote_stand.shape[0]
+pca_neutral_cov = pca_neut_stand.T.dot(pca_neut_stand)/pca_neut_stand.shape[0]
 # Compute Inverses 
 inv_emote_cov = np.linalg.inv(pca_emote_cov)
 inv_neutral_cov = np.linalg.inv(pca_neutral_cov)
 
+# Discriminant Functions for the 2 class 
+# Neutral Faces
 g1 = lambda x: (inv_neutral_cov.dot(mu_neut).T).dot(x) - \
     (0.5 * mu_neut.T.dot(inv_neutral_cov.dot(mu_neut)))
 
+# Emotional Faces 
 g2 = lambda x: (inv_emote_cov.dot(np.array(theta_mu_emote)).T).dot(x) - \
     (0.5 * mu_emote.T.dot(inv_emote_cov.dot(mu_emote)))
 
+# Run the testing data through the discriminant Functions and 
+# Classify based on the larger output value 
 preds = []
 for val in range(len(x_test)):
     test_arr = np.array(x_test.iloc[val])
@@ -89,11 +95,7 @@ for val in range(len(x_test)):
     else:
         preds.append(1)
 
+# Check the Accuracy of the Predicted values vs the Labels 
 print(accuracy_score(y_test, preds))
 
 
-# tester = np.array(x_test.iloc[1])
-# print(g1(tester))
-# print(g2(tester))
-# print(y_test.iloc[1])
-# print(g1(tester) > g2(tester))
