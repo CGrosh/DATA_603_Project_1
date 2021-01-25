@@ -24,7 +24,7 @@ for i in range(200):
 full_data = np.array([data[:,:,i] for i in range(600)])
 
 # PCA Preprocessing
-pca_coms = 20
+pca_coms = 400
 cols = ['PCA'+str(i+1) for i in range(pca_coms)]
 
 # Standardize and center data
@@ -46,10 +46,39 @@ pca_full = np.concatenate(pca_arrs, axis=1)
 pca_df = pd.DataFrame(data=pca_full, columns=cols)
 pca_df['labels'] = pd.Series(labels)
 
+total_mu = np.array(np.mean(pca_df[cols]))
+
+# Fishers Linear Discriminant 
+pca_emote_fda = pca_df[cols].loc[np.array(pca_df[pca_df['labels']==1].index)]
+pca_neutral_fda = pca_df[cols].loc[np.array(pca_df[pca_df['labels']==0].index)]
+
+# Compute Column means and Center data 
+mu_emote_fda, mu_neut_fda = np.array(np.mean(pca_emote_fda)), np.array(np.mean(pca_neutral_fda))
+pca_emote_stand_fda = scale.fit_transform(pca_emote_fda)
+pca_neut_stand_fda = scale.fit_transform(pca_neutral_fda)
+
+# Scatter Matrices
+emote_scat = pca_emote_stand_fda.T.dot(pca_emote_stand_fda)
+netural_scat = pca_neut_stand_fda.T.dot(pca_neut_stand_fda)
+
+# Within Class Scatter Matrix 
+sw = emote_scat + netural_scat
+
+w = np.linalg.inv(sw).dot(mu_neut_fda-mu_emote_fda)
+
+x_lda = np.array(pca_df[cols]).dot(w) 
+pca_df['Fishers_LD'] = pd.Series(x_lda)
+
 # Split the Data into training and testing Features and Labels 
+# Split used for testing without MDA 
 x_train, x_test, y_train, y_test = train_test_split(pca_df[cols], 
                                     pca_df['labels'], test_size=0.3, 
                                     random_state=5)
+
+# Split used testing with MDA 
+# x_train, x_test, y_train, y_test = train_test_split(pca_df['Fishers_LD'], 
+#                                     pca_df['labels'], test_size=0.3, 
+#                                     random_state=5)
 
 # Data of the Neutral and the Emotional Projected Instances
 pca_emote = x_train.loc[np.array(y_train[y_train==1].index)]
@@ -59,11 +88,19 @@ pca_neutral = x_train.loc[np.array(y_train[y_train==0].index)]
 theta_mu_emote, theta_var_emote = np.mean(pca_emote[cols]), np.var(pca_emote[cols])
 theta_mu_neut, theta_var_neut = np.mean(pca_neutral[cols]), np.var(pca_neutral[cols])
 
+# Column means for MDA process 
+# theta_mu_emote, theta_var_emote = np.mean(pca_emote), np.var(pca_emote)
+# theta_mu_neut, theta_var_neut = np.mean(pca_neutral), np.var(pca_neutral)
+
 mu_emote, mu_neut = np.array(theta_mu_emote), np.array(theta_mu_neut)
 
 # Center the Data 
 pca_emote_stand = scale.fit_transform(pca_emote[cols])
 pca_neut_stand = scale.fit_transform(pca_neutral[cols])
+
+# Center the data when using MDA 
+# pca_emote_stand = scale.fit_transform(np.array(pca_emote).reshape(-1,1))
+# pca_neut_stand = scale.fit_transform(np.array(pca_neutral).reshape(-1,1))
 
 # Compute Covariance Matricies
 pca_emote_cov = pca_emote_stand.T.dot(pca_emote_stand)/pca_emote_stand.shape[0]

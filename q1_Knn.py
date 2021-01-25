@@ -19,13 +19,15 @@ def knn_fit(x_train, y_train, x_test, k):
 
     train_x = np.array(x_train)
     train_y = np.array(y_train)
-
+    # if len(train_x.shape) == 1:
+    train_x = train_x.reshape(1, train_x.shape[0])
     pred_arr = []
     dist_arrs = []
     for test_val in range(len(x_test)):
         test_arr = np.array(x_test.iloc[test_val])
-        test_arr = test_arr.reshape(1, test_arr.shape[0])
-        dists_x = np.linalg.norm(train_x- test_arr, axis=1, ord=2)
+        # if len(test_arr.shape) > 0:
+        # test_arr = test_arr.reshape(1, test_arr.shape[0])
+        dists_x = np.linalg.norm(train_x- test_arr, axis=0, ord=2)
         joined_dists = np.column_stack((train_y, dists_x))
 
         sorts = joined_dists[joined_dists[:,1].argsort()]
@@ -55,7 +57,7 @@ full_data = np.array([data[:,:,i] for i in range(600)])
 neut_emote = np.take(full_data, neut_emote_indx, axis=0)
 
 # PCA Preprocessing
-pca_coms = 7
+pca_coms = 10
 cols = ['PCA'+str(i+1) for i in range(pca_coms)]
 
 # Standardize and center data
@@ -75,7 +77,6 @@ pca_full = np.concatenate(pca_arrs, axis=1)
 
 pca_df = pd.DataFrame(data=pca_full, columns=cols)
 pca_df['labels'] = pd.Series(labels)
-# pca_df = pca_df.sample(frac=1).reset_index(drop=True)
 
 total_mu = np.array(np.mean(pca_df[cols]))
 
@@ -97,7 +98,7 @@ sw = emote_scat + netural_scat
 
 w = np.linalg.inv(sw).dot(mu_neut-mu_emote)
 
-eig_vals, eig_vecs = np.linalg.eig(np.linalg.inv(sw).dot(sb))
+# eig_vals, eig_vecs = np.linalg.eig(np.linalg.inv(sw).dot(sb))
 
 # pairs = [(np.abs(eig_vals[i]), eig_vecs[:,i]) for i in range(len(eig_vals))]
 # pairs = sorted(pairs, key=lambda x: x[0], reverse=True)
@@ -106,10 +107,33 @@ eig_vals, eig_vecs = np.linalg.eig(np.linalg.inv(sw).dot(sb))
 
 # w_matrix = np.hstack((pairs[0][1].reshape(7,1), pairs[1][1].reshape(7,1))).real
 x_lda = np.array(pca_df[cols]).dot(w) 
+pca_df['Fishers_LD'] = pd.Series(x_lda)
 
-x_train, x_test, y_train, y_test = train_test_split(pca_df[cols], 
+# Train Test Split for the Classifier using PCA Features
+# x_train, x_test, y_train, y_test = train_test_split(pca_df[cols], 
+#                                     pca_df['labels'], test_size=0.3, 
+#                                     random_state=4)
+
+# Train Test Split using the Fisher LDA Column
+x_train, x_test, y_train, y_test = train_test_split(pca_df['Fishers_LD'], 
                                     pca_df['labels'], test_size=0.3, 
                                     random_state=4)
 
-preds = knn_fit(x_train, y_train, x_test, 65)
-print(accuracy_score(y_test, preds))
+Ns = [i for i in range(1,200,2)]
+accs = []
+pca_com_lst = [pca_coms for i in range(len(Ns))]
+for n in Ns:
+    preds = knn_fit(x_train, y_train, x_test, n)
+    accs.append(accuracy_score(y_test, preds))
+
+n_df = pd.DataFrame({'Nearest Neighbor Value': Ns, 'Accuracy': accs, 'PCA_N': pca_com_lst})
+print(n_df)
+ax = n_df.plot(x='Nearest Neighbor Value', y='Accuracy')
+ax.set_ylabel('Accuracy')
+ax.set_title('Fishers LD on PCA Dim: ' + str(pca_coms))
+plt.show()
+
+# n_df.to_csv('../knn_1_mda10.csv')
+
+# preds = knn_fit(x_train, y_train, x_test, 75)
+# print(accuracy_score(y_test, preds))
