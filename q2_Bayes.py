@@ -28,6 +28,7 @@ labels = labels.reshape(65,)
 cleaned_data  = np.array([full_data[i][:] for i in range(len(full_data)-63)])
 cleaned_data = cleaned_data.reshape(65, 1920)
 
+# Mark the indices for the testing data 
 test_ind = []
 for i in range(len(full_data)-63):
     person_lst = []
@@ -122,6 +123,7 @@ for test_val in range(len(x_test)):
         func_outs.append(func(test_arr))
     preds.append(np.argmax(func_outs))
 
+# Print out the accuracy for the Bayes Model 
 print(accuracy_score(y_test, preds))
     
     

@@ -15,6 +15,7 @@ def euclidean(x1, x2):
     dist = math.sqrt(sum([(a-b)**2 for a, b in zip(x1, x2)]))
     return dist
 
+# Base function for computing distances and predicting using KNN 
 def knn_fit(x_train, y_train, x_test, k):
 
     train_x = np.array(x_train)
@@ -98,14 +99,7 @@ sw = emote_scat + netural_scat
 
 w = np.linalg.inv(sw).dot(mu_neut-mu_emote)
 
-# eig_vals, eig_vecs = np.linalg.eig(np.linalg.inv(sw).dot(sb))
-
-# pairs = [(np.abs(eig_vals[i]), eig_vecs[:,i]) for i in range(len(eig_vals))]
-# pairs = sorted(pairs, key=lambda x: x[0], reverse=True)
-
-# eigen_value_sums = sum(eig_vals)
-
-# w_matrix = np.hstack((pairs[0][1].reshape(7,1), pairs[1][1].reshape(7,1))).real
+# Compute Fisher LDA and add to the data 
 x_lda = np.array(pca_df[cols]).dot(w) 
 pca_df['Fishers_LD'] = pd.Series(x_lda)
 

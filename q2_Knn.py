@@ -18,6 +18,7 @@ def show_pose(person, pose, data):
 def get_pose(person, pose, data):
     return data[:,:,pose, person]
 
+# Similar function for computing the KNN
 def knn_fit(x_train, y_train, x_test, k):
 
     # Format the training data into arrays 
@@ -128,7 +129,7 @@ y_test = x_test['labels']
 x_test = x_test[cols]
 
 
-
+# Loop for testing out the different parameters of the KNN
 Ns = [i for i in range(1,200,2)]
 accs = []
 for n in Ns:
